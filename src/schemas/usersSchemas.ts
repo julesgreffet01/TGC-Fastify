@@ -12,3 +12,16 @@ export const registerSchema = {
         }
     }
 }
+
+export const loginSchema = {
+    schema: {
+        body: {
+            type: 'object',
+            required: ['username', 'password'],
+            properties: {
+                username: {type: 'string'},
+                password: {type: 'string'},
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-import type {FastifyRequest, FastifyReply, RouteShorthandOptions, FastifySchema} from "fastify";
+import type {FastifyReply, FastifyRequest} from "fastify";
 import type {ResponseApi} from "../interfaces/responseApi";
 import fs from 'node:fs'
 import type {UserInterface} from "../interfaces/userInterface";
@@ -24,5 +24,19 @@ export function RegisterUser(req: FastifyRequest<{ Body: { username: string, pas
 }
 
 export function login(req: FastifyRequest<{ Body: {username: string, password: string} }>, res: FastifyReply) {
-
+    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
+    const user = users.find(user => user.username === req.body.username);
+    if (!user) {
+        res.status(401).send({error: "user not found"})
+        return;
+    }
+    user.token = crypto.randomUUID();
+    fs.writeFileSync('data/users.json', JSON.stringify(users));
+    const response: ResponseApi = {
+        message: 'auth reussi',
+        data: {
+            'token': user.token,
+        }
+    }
+    res.status(200).send(response);
 }
