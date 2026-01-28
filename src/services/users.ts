@@ -16,6 +16,9 @@ export function RegisterUser(req: FastifyRequest<{ Body: { username: string, pas
     } else {
         userId = 1
     }
+    if(users.find(user => user.username === req.body.username)) {
+        res.status(401).send({message: "ce nom d utilisateur existe deja"})
+    }
 
     const newUser: UserInterface = {
         id: userId,
