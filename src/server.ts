@@ -10,6 +10,7 @@ import {
 
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
+import {openBoosterSchema} from "./schemas/cardsSchemas.js";
 
 const fastify = Fastify({logger: true})
 
@@ -37,6 +38,8 @@ fastify.delete('/disconnect', users.disconect)
 
 // ------------ cards ------------
 fastify.get('/cards', cards.getAll)
+fastify.get('/openBooster', openBoosterSchema, cards.openBooster)
+fastify.post('/convert/:idCard', cards.convert)
 
 
 await fastify.listen({port: 3000})

@@ -4,8 +4,19 @@ import fs from 'node:fs'
 import type {UserInterface} from "../interfaces/userInterface.js";
 
 export function RegisterUser(req: FastifyRequest<{ Body: { username: string, password: string } }>, res: FastifyReply) {
-    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
-    const userId = users[users.length - 1].id + 1;
+    let users: UserInterface[] = [];
+    try {
+        const data = fs.readFileSync('data/users.json', 'utf-8').trim();
+        users = data ? JSON.parse(data) : [];
+    } catch (err) {
+        users = [];
+    }    let userId
+    if(users.length > 0){
+        userId = users[users.length - 1].id + 1;
+    } else {
+        userId = 1
+    }
+
     const newUser: UserInterface = {
         id: userId,
         username: req.body.username,
