@@ -1,3 +1,5 @@
+import {FastifyRequest} from "fastify";
+
 export const getAllEncheresSchemas = {
     schema: {
         headers: {
@@ -24,6 +26,26 @@ export const findEnchereSchemas = {
             required: ['idEnchere'],
             properties: {
                 idEnchere: {type: 'string'},
+            }
+        }
+    }
+}
+
+export const createEnchereSchema = {
+    schema: {
+        headers: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+                token: {type: 'string'},
+            }
+        },
+        body: {
+            type: 'object',
+            required: ['idCarte'],
+            properties: {
+                idCarte: {type: 'number'},
+                earlyPrice: {type: 'number'},
             }
         }
     }
