@@ -1,11 +1,15 @@
 import Fastify from 'fastify'
+import * as users from './services/users'
+import {registerSchema} from "./schemas/usersSchemas";
 const fastify = Fastify({
-    logger: true
+    logger: true,
 })
 
 fastify.get('/', async function handler (request, reply) {
     return { hello: 'world' }
 })
+
+fastify.post('/register', registerSchema, users.RegisterUser)
 
 const start = async () => {
     try {
