@@ -25,3 +25,15 @@ export const loginSchema = {
         }
     }
 }
+
+export const findSchema = {
+    schema: {
+        body: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+                token: {type: 'string'},
+            }
+        }
+    }
+}
