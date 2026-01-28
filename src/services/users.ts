@@ -1,7 +1,7 @@
 import type {FastifyReply, FastifyRequest} from "fastify";
-import type {ResponseApi} from "../interfaces/responseApi";
+import type {ResponseApi} from "../interfaces/responseApi.js";
 import fs from 'node:fs'
-import type {UserInterface} from "../interfaces/userInterface";
+import type {UserInterface} from "../interfaces/userInterface.js";
 
 export function RegisterUser(req: FastifyRequest<{ Body: { username: string, password: string } }>, res: FastifyReply) {
     const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
