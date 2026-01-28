@@ -28,7 +28,26 @@ export const loginSchema = {
 
 export const findSchema = {
     schema: {
+        headers: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+                token: {type: 'string'},
+            }
+        }
+    }
+}
+
+export const updateSchema = {
+    schema: {
         body: {
+            type: 'object',
+            properties: {
+                username: {type: 'string'},
+                password: {type: 'string'},
+            }
+        },
+        headers: {
             type: 'object',
             required: ['token'],
             properties: {

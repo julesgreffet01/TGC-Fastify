@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import * as users from './services/users'
-import {findSchema, loginSchema, registerSchema} from "./schemas/usersSchemas";
+import {findSchema, loginSchema, registerSchema, updateSchema} from "./schemas/usersSchemas";
 const fastify = Fastify({
     logger: true,
 })
@@ -13,7 +13,11 @@ fastify.post('/register', registerSchema, users.RegisterUser)
 
 fastify.post('/login', loginSchema, users.login)
 
-fastify.post('/user', findSchema, users.find)
+fastify.get('/user',findSchema, users.find)
+
+fastify.patch('/user', updateSchema, users.update)
+
+fastify.delete('/disconnect', users.disconect)
 
 const start = async () => {
     try {

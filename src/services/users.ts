@@ -27,28 +27,26 @@ export function login(req: FastifyRequest<{ Body: { username: string, password: 
     const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
     const user = users.find(user => user.username === req.body.username);
 
-    if (!user) {
+    if (!user || user.password !== req.body.password) {
         res.status(401).send({error: "user not found"})
         return;
     }
-    if (user?.password === req.body.password) {
-        user.token = crypto.randomUUID();
-        fs.writeFileSync('data/users.json', JSON.stringify(users));
-        const response: ResponseApi = {
-            message: 'auth reussi',
-            data: {
-                'token': user.token,
-            }
+    user.token = crypto.randomUUID();
+    fs.writeFileSync('data/users.json', JSON.stringify(users));
+    const response: ResponseApi = {
+        message: 'auth reussi',
+        data: {
+            'token': user.token,
         }
-        res.status(200).send(response);
     }
+    res.status(200).send(response);
 }
 
-export function find(req: FastifyRequest<{ Body: { token: string } }>, res: FastifyReply) {
+export function find(req: FastifyRequest<{ Headers: { token: string } }>, res: FastifyReply) {
     const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
-    const user = users.find(user => user.token === req.body.token);
+    const user = users.find(user => user.token === req.headers.token);
     if (!user) {
-        res.status(401).send({error: "user not found"})
+        res.status(403).send({error: "token invalid"})
         return;
     }
     const response: ResponseApi = {
@@ -56,6 +54,47 @@ export function find(req: FastifyRequest<{ Body: { token: string } }>, res: Fast
         data: {
             'user': user,
         }
+    }
+    res.status(200).send(response);
+}
+
+export function update(req: FastifyRequest<{
+    Body: { username?: string, password?: string }, Headers: { token: string }
+}>, res: FastifyReply) {
+    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
+    const user = users.find(user => user.token === req.headers.token);
+    if (!user) {
+        res.status(403).send({error: "token invalid"})
+        return;
+    }
+    if (req.body.username) {
+        user.username = req.body.username;
+    }
+    if (req.body.password) {
+        user.password = req.body.password;
+    }
+    fs.writeFileSync('data/users.json', JSON.stringify(users));
+    const response: ResponseApi = {
+        message: "update reussi",
+        data: {
+            user
+        }
+    }
+    res.status(200).send(response);
+}
+
+export function disconect(req: FastifyRequest<{Headers: {token: string}}>, res: FastifyReply) {
+    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
+    const user = users.find(user => user.token === req.headers.token);
+    if (!user) {
+        res.status(403).send({error: "token invalid"})
+        return;
+    }
+    user.token = undefined;
+    fs.writeFileSync('data/users.json', JSON.stringify(users));
+    const response: ResponseApi = {
+        message: "deconnexion reussi",
+        data: {}
     }
     res.status(200).send(response);
 }
