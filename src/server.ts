@@ -19,6 +19,7 @@ import {
     getAllEncheresSchemas,
     PlaceOnEnchereSchema
 } from "./schemas/encheresSchemas.js";
+import {UserDAO} from "./database/DAO/userDAO.js";
 
 const fastify = Fastify({logger: true})
 
@@ -56,6 +57,7 @@ fastify.get('/bid/:idEnchere', findEnchereSchemas, encheres.find)
 fastify.post('/bid', createEnchereSchema, encheres.create)
 fastify.put('/bid', PlaceOnEnchereSchema, encheres.placeOnEnchere)
 fastify.delete('/bid', CloseEnchereSchema, encheres.closeEnchere)
+
 
 
 await fastify.listen({port: 3000})
