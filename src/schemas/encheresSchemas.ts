@@ -50,3 +50,42 @@ export const createEnchereSchema = {
         }
     }
 }
+
+export const PlaceOnEnchereSchema = {
+    schema: {
+        headers: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+                token: {type: 'string'},
+            }
+        },
+        body: {
+            type: 'object',
+            required: ['idCarte'],
+            properties: {
+                montant: {type: 'number'},
+                idEnchere: {type: 'number'},
+            }
+        }
+    }
+}
+
+export const CloseEnchereSchema = {
+    schema: {
+        headers: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+                token: {type: 'string'},
+            }
+        },
+        body: {
+            type: 'object',
+            required: ['idCarte'],
+            properties: {
+                idEnchere: {type: 'number'},
+            }
+        }
+    }
+}

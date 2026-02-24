@@ -32,7 +32,7 @@ export function openBooster(req: FastifyRequest, res: FastifyReply) {
     const nbCard = 5
     const cardsBooster: CardInterface[] = []
     for (let ii = 0; ii<nbCard; ii++) {
-        const chance = Math.floor(Math.random() * 101);
+        const chance = Math.floor(Math.random() * 100);
         let rarete: string = "";
         if( chance <= 80 ) {
             rarete = "common"

@@ -12,7 +12,13 @@ import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import {openBoosterSchema} from "./schemas/cardsSchemas.js";
 import * as encheres from './services/encheres.js'
-import {createEnchereSchema, findEnchereSchemas, getAllEncheresSchemas} from "./schemas/encheresSchemas.js";
+import {
+    CloseEnchereSchema,
+    createEnchereSchema,
+    findEnchereSchemas,
+    getAllEncheresSchemas,
+    PlaceOnEnchereSchema
+} from "./schemas/encheresSchemas.js";
 
 const fastify = Fastify({logger: true})
 
@@ -48,6 +54,8 @@ fastify.post('/convert/:idCard', cards.convert)
 fastify.get('/bid', getAllEncheresSchemas, encheres.getAll)
 fastify.get('/bid/:idEnchere', findEnchereSchemas, encheres.find)
 fastify.post('/bid', createEnchereSchema, encheres.create)
+fastify.put('/bid', PlaceOnEnchereSchema, encheres.placeOnEnchere)
+fastify.delete('/bid', CloseEnchereSchema, encheres.closeEnchere)
 
 
 await fastify.listen({port: 3000})

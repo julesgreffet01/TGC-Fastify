@@ -20,6 +20,9 @@ export function getAll(req: FastifyRequest<{Headers: {token: string}}>, res: Fas
         message = "il n y a pas d enchere pour le moment"
         encheres = [];
     }
+    encheres = encheres.filter(enchere => {
+        return !enchere.end_date
+    })
     const response: ResponseApi = {
         message,
         data: encheres,
@@ -75,7 +78,7 @@ export function create(req: FastifyRequest<{Headers: {token: string}, Body: {idC
     }
     let enchereId;
     if(encheres.length > 0) {
-        enchereId = encheres.length;
+        enchereId = encheres.length + 1;
     } else {
         enchereId = 1;
     }
@@ -103,7 +106,7 @@ export function create(req: FastifyRequest<{Headers: {token: string}, Body: {idC
     res.status(200).send(response);
 }
 
-export function placeOnEnchere(req: FastifyRequest<{Headers: {token: string}, Params: {idEnchere: string}, Body: {montant: number}}>, res: FastifyReply){
+export function placeOnEnchere(req: FastifyRequest<{Headers: {token: string}, Body: {montant: number, idEnchere: string}}>, res: FastifyReply){
     const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
     const user = users.find(user => user.token === req.headers.token);
     if (!user) {
@@ -116,16 +119,20 @@ export function placeOnEnchere(req: FastifyRequest<{Headers: {token: string}, Pa
     } catch (err) {
         encheres = [];
     }
-    const enchere = encheres.find(enchere => enchere.id === Number(req.params.idEnchere));
+    const enchere = encheres.find(enchere => enchere.id === Number(req.body.idEnchere));
     if (!enchere) {
         res.status(405).send({error: "cette enchere n existe pas"})
         return
+    }
+    if(enchere.end_date){
+        res.status(403).send({error: "elle est deja fermé l enchere"})
+        return;
     }
     if(enchere.bid >= req.body.montant) {
         res.status(403).send({error: "le montant est trop bas"})
         return;
     }
-    if(!user.currency || (req.body.montant >= user.currency)){
+    if(!user.currency || (req.body.montant > user.currency)){
         res.status(401).send({error: "l utilisateur n as pas l argent"})
         return;
     }
@@ -145,4 +152,39 @@ export function placeOnEnchere(req: FastifyRequest<{Headers: {token: string}, Pa
         data: {},
     }
     res.status(200).send(response);
+}
+
+export function closeEnchere(req: FastifyRequest<{Headers: {token: string}, Body: {idEnchere: number}}>, res: FastifyReply){
+    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
+    const user = users.find(user => user.token === req.headers.token);
+    if (!user) {
+        res.status(403).send({error: "token invalid"})
+        return;
+    }
+    let encheres: EnchereInterface[];
+    try {
+        encheres = JSON.parse(fs.readFileSync('data/encheres.json', 'utf-8'));
+    } catch (err) {
+        encheres = [];
+    }
+    const enchere = encheres.find(enchere => enchere.id === Number(req.body.idEnchere));
+    if (!enchere) {
+        res.status(405).send({error: "cette enchere n existe pas"})
+        return
+    }
+
+    if(enchere.seller_id === user.id) {
+        enchere.end_date = new Date();
+        user.currency = (user.currency ?? 0) + enchere.bid;
+        fs.writeFileSync('data/encheres.json', JSON.stringify(encheres));
+        fs.writeFileSync('data/users.json', JSON.stringify(users));
+        const response: ResponseApi = {
+            message: "cloture de l enchere",
+            data: {},
+        }
+        res.status(200).send(response);
+    } else {
+        res.status(405).send({error: "Ce n est pas votre enchere"})
+        return
+    }
 }
