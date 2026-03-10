@@ -3,9 +3,13 @@ import fs from "node:fs";
 import {ResponseApi} from "../interfaces/responseApi.js";
 import {FastifyReply, FastifyRequest} from "fastify";
 import {CardInterface} from "../interfaces/cardInterface.js";
+import {CardDAO} from "../database/DAO/cardDAO.js";
+import {UserDAO} from "../database/DAO/userDAO.js";
 
-export function getAll(req: FastifyRequest, res: FastifyReply) {
-    const cards: CardInterface[] = JSON.parse(fs.readFileSync('data/cards.json', 'utf-8'));
+export async function getAll(req: FastifyRequest, res: FastifyReply) {
+    // const cards: CardInterface[] = JSON.parse(fs.readFileSync('data/cards.json', 'utf-8'));
+    const cardDao = new CardDAO();
+    const cards = await cardDao.getAll();
     const response: ResponseApi = {
         message: "voici toutes les cartes disponible",
         data: cards,
@@ -13,11 +17,17 @@ export function getAll(req: FastifyRequest, res: FastifyReply) {
     return res.status(200).send(response);
 }
 
-export function openBooster(req: FastifyRequest, res: FastifyReply) {
-    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
-    const user = users.find(user => user.token === req.headers.token);
+export async function openBooster(req: FastifyRequest, res: FastifyReply) {
+    // const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
+    // const user = users.find(user => user.token === req.headers.token);
+    // if (!user) {
+    //     res.status(403).send({error: "token invalid"})
+    //     return;
+    // }
+    const userDao = new UserDAO();
+    let user = await userDao.findById(req.user?.id ?? 0);
     if (!user) {
-        res.status(403).send({error: "token invalid"})
+        res.status(403).send({error: "user not found"})
         return;
     }
     if(user.lastBooster) {
@@ -27,7 +37,9 @@ export function openBooster(req: FastifyRequest, res: FastifyReply) {
             return;
         }
     }
-    const cards: CardInterface[] = JSON.parse(fs.readFileSync('data/cards.json', 'utf-8'));
+    // const cards: CardInterface[] = JSON.parse(fs.readFileSync('data/cards.json', 'utf-8'));
+    const cardDao = new CardDAO();
+    const cards = await cardDao.getAll();
 
     const nbCard = 5
     const cardsBooster: CardInterface[] = []
@@ -41,6 +53,7 @@ export function openBooster(req: FastifyRequest, res: FastifyReply) {
         } else {
             rarete = "legendary"
         }
+        // on aurait pu faire une requete sql pour optimiser
         const cardsPossibles = cards.filter(card => card.rarity === rarete);
         if(!cardsPossibles) {
             throw new Error('c est pas normale')
@@ -48,15 +61,20 @@ export function openBooster(req: FastifyRequest, res: FastifyReply) {
         const indexId = Math.floor(Math.random() * cardsPossibles.length);
         const cardChoice = cardsPossibles[indexId];
         cardsBooster.push(cardChoice);
-        const existant = user.collection.find(row => row.id === cardChoice.id)
-        if(existant) {
-            existant.qt ++
-        } else {
-            user.collection.push({id: cardChoice.id, qt: 1, name: cardChoice.name});
-        }
+        // const existant = user.collection.find(row => row.id === cardChoice.id)
+        // if(existant) {
+        //     existant.qt ++
+        // } else {
+        //     user.collection.push({id: cardChoice.id, qt: 1, name: cardChoice.name});
+        // }
     }
-    user.lastBooster = new Date();
-    fs.writeFileSync('data/users.json', JSON.stringify(users));
+    await userDao.addBooster(user.id, cardsBooster)
+    user = await userDao.findById(user.id);
+    if(!user) {
+        res.status(403).send({error: "user not found"})
+        return;
+    }
+    // fs.writeFileSync('data/users.json', JSON.stringify(users));
     const response: ResponseApi = {
         message: "vous avez ouvert votre booster",
         data: cardsBooster,
@@ -64,18 +82,25 @@ export function openBooster(req: FastifyRequest, res: FastifyReply) {
     return res.status(200).send(response);
 }
 
-export function convert(req: FastifyRequest<{Headers: {token: string}, Params: {idCard: number}}>, res: FastifyReply) {
-    const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
-    const user = users.find(user => user.token === req.headers.token);
+export async function convert(req: FastifyRequest<{Headers: {token: string}, Params: {idCard: number}}>, res: FastifyReply) {
+    // const users: UserInterface[] = JSON.parse(fs.readFileSync('data/users.json', 'utf-8'));
+    // const user = users.find(user => user.token === req.headers.token);
+    // if (!user) {
+    //     res.status(403).send({error: "token invalid"})
+    //     return;
+    // }
+    const userDao = new UserDAO();
+    const user = await userDao.findById(req.user?.id ?? 0);
     if (!user) {
         res.status(403).send({error: "token invalid"})
         return;
     }
-    const cards: CardInterface[] = JSON.parse(fs.readFileSync('data/cards.json', 'utf-8'));
+    // const cards: CardInterface[] = JSON.parse(fs.readFileSync('data/cards.json', 'utf-8'));
+    const cardDao = new CardDAO();
+    const cards = await cardDao.getAll();
+    // on aurait pu faire une requete sql pour opti
     const card = cards.find(card => card.id === Number(req.params.idCard));
     const collectionRow = user.collection.find(row => row.id === Number(req.params.idCard))
-    console.log(collectionRow);
-    console.log(card);
     if(!card || !collectionRow) {
         res.status(401).send({error: "l id de la carte n est pas valid (pas de carte trouve) ou l utilisateur n as pas la carte"})
         return;
@@ -92,7 +117,8 @@ export function convert(req: FastifyRequest<{Headers: {token: string}, Params: {
     } else {
         user.currency ? user.currency += 40 : user.currency = 40;
     }
-    fs.writeFileSync('data/users.json', JSON.stringify(users));
+    await userDao.update(user)
+    // fs.writeFileSync('data/users.json', JSON.stringify(users));
     const response: ResponseApi = {
         message: "la conversion a été faite",
         data: {},

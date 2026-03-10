@@ -53,18 +53,22 @@ fastify.post('/register', registerSchema, users.RegisterUser)
 fastify.post('/login', loginSchema, users.login)
 fastify.register(async function (fastify){
 
-    fastify.addHook("preHandler", tokenMiddleware) //middleware
+    //------------- middleware --------------
+    fastify.addHook("preHandler", tokenMiddleware)
 
+    //-------------- users -----------
     fastify.get('/user', findSchema, users.find)
     fastify.patch('/user', updateSchema, users.update)
     fastify.delete('/disconnect', users.disconect)
+
+    //------------- cards -----------------
+    fastify.get('/openBooster', openBoosterSchema, cards.openBooster)
+    fastify.post('/convert/:idCard', cards.convert)
 }, {})  //routes qui necessites une auth
 
 
 // ------------ cards ------------
 fastify.get('/cards', cards.getAll)
-fastify.get('/openBooster', openBoosterSchema, cards.openBooster)
-fastify.post('/convert/:idCard', cards.convert)
 
 
 //---------------- encheres -------------
