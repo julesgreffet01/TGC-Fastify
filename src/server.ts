@@ -64,6 +64,11 @@ fastify.register(async function (fastify){
     //------------- cards -----------------
     fastify.get('/openBooster', openBoosterSchema, cards.openBooster)
     fastify.post('/convert/:idCard', cards.convert)
+
+    // ---------------------- bid -------------
+    fastify.post('/bid', createEnchereSchema, encheres.create)
+    fastify.put('/bid', PlaceOnEnchereSchema, encheres.placeOnEnchere)
+    fastify.delete('/bid', CloseEnchereSchema, encheres.closeEnchere)
 }, {})  //routes qui necessites une auth
 
 
@@ -74,9 +79,6 @@ fastify.get('/cards', cards.getAll)
 //---------------- encheres -------------
 fastify.get('/bid', getAllEncheresSchemas, encheres.getAll)
 fastify.get('/bid/:idEnchere', findEnchereSchemas, encheres.find)
-fastify.post('/bid', createEnchereSchema, encheres.create)
-fastify.put('/bid', PlaceOnEnchereSchema, encheres.placeOnEnchere)
-fastify.delete('/bid', CloseEnchereSchema, encheres.closeEnchere)
 
 
 

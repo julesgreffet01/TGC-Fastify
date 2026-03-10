@@ -34,3 +34,26 @@ CREATE TABLE user_cards
             REFERENCES cards (id)
             ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE bids
+(
+    id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    end_date  TIMESTAMP,
+    bid       INT UNSIGNED,
+    bidder_id INT UNSIGNED NULL,
+    seller_id INT UNSIGNED,
+    card_id   INT UNSIGNED,
+
+    CONSTRAINT fk_bid_bidder
+        FOREIGN KEY (bidder_id)
+            REFERENCES users (id)
+            ON DELETE SET NULL,
+    CONSTRAINT fk_bid_seller
+        FOREIGN KEY (seller_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_bid_card
+        FOREIGN KEY (card_id)
+            REFERENCES cards (id)
+            ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,8 +1,8 @@
 export interface EnchereInterface {
     id: number;
-    card_id: number;
-    seller_id: number;
-    end_date: Date | null;
-    bidder_id: number | null;
+    cardId: number;
+    sellerId: number;
+    endDate: Date | null;
+    bidderId: number | null;
     bid: number;
 }

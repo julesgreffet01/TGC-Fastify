@@ -1,8 +1,8 @@
-import { UserInterface } from "../../interfaces/userInterface.js";
-import { pool } from "../connection.js";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
+import {UserInterface} from "../../interfaces/userInterface.js";
+import {pool} from "../connection.js";
+import type {ResultSetHeader, RowDataPacket} from "mysql2";
+import {randomBytes, scrypt, timingSafeEqual} from "node:crypto";
+import {promisify} from "node:util";
 import {CardInterface} from "../../interfaces/cardInterface.js";
 
 const scryptAsync = promisify(scrypt);
@@ -134,9 +134,9 @@ export class UserDAO {
         if (rows.length === 0) {
             return undefined;
         }
-        const cards: {id: number; name: string; qt: number}[] = [];
+        const cards: { id: number; name: string; qt: number }[] = [];
         rows.forEach((row) => {
-            if(row.card_id != null){
+            if (row.card_id != null) {
                 cards.push({
                     id: row.card_id,
                     name: row.card_name,
@@ -160,11 +160,19 @@ export class UserDAO {
             "UPDATE users SET username = ?, password = ?, currency = ? WHERE id = ?",
             [user.username, user.password, user.currency ?? 0, user.id],
         )
-        const queries = user.collection.map(card =>
-            pool.execute(
-                "UPDATE user_cards SET quantity = ? WHERE user_id = ? AND card_id = ?",
-                [card.qt, user.id, card.id]
-            )
+        const queries = user.collection.map(card => {
+                if (!card.qt) {
+                    pool.execute(
+                        "DELETE FROM user_cards WHERE user_id = ? AND card_id = ?",
+                        [user.id, card.id]
+                    )
+                } else {
+                    pool.execute(
+                        "UPDATE user_cards SET quantity = ? WHERE user_id = ? AND card_id = ?",
+                        [card.qt, user.id, card.id]
+                    )
+                }
+            }
         );
         await Promise.all(queries);
         return user;
@@ -179,12 +187,12 @@ export class UserDAO {
 
     async addBooster(userId: number, cards: CardInterface[]): Promise<void> {
         //a voir si y a pas moyen d opti ca avec un Promise.all et faire une requete avant qui met en forme un tableau
-        for(const card of cards) {
+        for (const card of cards) {
             const [row] = await pool.execute<UserCardResponse[]>(
                 "select * from user_cards where user_id = ? AND card_id = ?",
                 [userId, card.id],
             )
-            if(row.length === 0) {
+            if (row.length === 0) {
                 await pool.execute(
                     "INSERT INTO user_cards (user_id, card_id, quantity) VALUES (?, ?, 1)",
                     [userId, card.id],
