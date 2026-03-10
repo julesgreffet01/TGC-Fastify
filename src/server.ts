@@ -20,8 +20,18 @@ import {
     PlaceOnEnchereSchema
 } from "./schemas/encheresSchemas.js";
 import {UserDAO} from "./database/DAO/userDAO.js";
+import {tokenMiddleware} from "./middlewares/tokenMiddleware.js";
 
+declare module "fastify" {
+    interface FastifyRequest {
+        user: {
+            id: number;
+        } | null;
+    }
+}
 const fastify = Fastify({logger: true})
+
+fastify.decorateRequest("user", null);
 
 await fastify.register(swagger, {
     openapi: {
@@ -41,9 +51,15 @@ await fastify.register(swaggerUI, {
 // ---------- users ---------------
 fastify.post('/register', registerSchema, users.RegisterUser)
 fastify.post('/login', loginSchema, users.login)
-fastify.get('/user', findSchema, users.find)
-fastify.patch('/user', updateSchema, users.update)
-fastify.delete('/disconnect', users.disconect)
+fastify.register(async function (fastify){
+
+    fastify.addHook("preHandler", tokenMiddleware) //middleware
+
+    fastify.get('/user', findSchema, users.find)
+    fastify.patch('/user', updateSchema, users.update)
+    fastify.delete('/disconnect', users.disconect)
+}, {})  //routes qui necessites une auth
+
 
 // ------------ cards ------------
 fastify.get('/cards', cards.getAll)
